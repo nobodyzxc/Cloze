@@ -8,7 +8,6 @@ scoop (w:ord) = w:replicate l '.' ++ [d]
 
 check tests = all (== True) $ map (any unistar . words) tests
 
-
 unqualified [] = []
 unqualified (t:est) =
   if any unistar $ words t
@@ -44,17 +43,19 @@ test fails (example:rest) = do
      else do
        putStr $ replicate (pred . length $ unwords answers) '-'
                 ++ "> " ++ unwords answers
-       _ <- getLine
+       getLine
        test (example:fails) rest
          where (problem, answers) = handle example
 
 main = do
   hSetBuffering stdout NoBuffering
-  args <- getArgs
-  raws <- fmap lines . readFile $
-    if null args then error "testfile?" else head args
-  let tests = filter (not . null) raws
-    in if check tests
-          then test [] tests
-          else error $ unqualified tests
-                      ++ "\n\n**exist non-stared sentence(s)**\n"
+  getArgs >>= (\args ->
+    return $ if null args
+                then error "testfile?"
+                else head args) >>=
+    fmap lines . readFile >>=
+    return . filter (not . null) >>= (\tests ->
+      if check tests
+         then test [] tests
+         else error $ unqualified tests
+                ++ "\n\n**exist non-stared sentence(s)**\n")
