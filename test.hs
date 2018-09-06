@@ -1,10 +1,17 @@
 import Data.List
+import Data.List.Split
+import Data.Char
 import System.IO
 import System.Environment
 
-scoop (w:ord) = w:replicate l '.' ++ [d]
-  where l = length ord - 1
-        d = last ord
+lower = map toLower
+
+scoop word@(w:ord)
+  | '-' `elem` word = intercalate "-" $ map scoop divided
+  | otherwise = w:replicate l '.' ++ [d]
+    where divided = splitOn "-" word
+          l = length ord - 1
+          d = last ord
 
 check tests = all (== True) $ map (any unistar . words) tests
 
@@ -38,7 +45,7 @@ test fails (example:rest) = do
   putStrLn $ problem ++ "\n"
   putStrLn . unwords $ map scoop answers
   input <- getLine
-  if words input == answers
+  if (words $ lower input) == map lower answers
      then test fails rest
      else do
        putStr $ replicate (pred . length $ unwords answers) '-'
@@ -49,6 +56,7 @@ test fails (example:rest) = do
 
 main = do
   hSetBuffering stdout NoBuffering
+  args = getArgs
   getArgs >>= (\args ->
     return $ if null args
                 then error "testfile?"
